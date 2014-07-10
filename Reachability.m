@@ -252,25 +252,33 @@ static void TMReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkRea
 
 -(BOOL)isReachableWithFlags:(SCNetworkReachabilityFlags)flags
 {
+#ifdef DEBUG
+    NSLog(@"reachability flags = %d -> %@", flags, reachabilityFlags(flags));
+#endif
     BOOL connectionUP = YES;
     
-    if(!(flags & kSCNetworkReachabilityFlagsReachable))
-        connectionUP = NO;
-    
-    if( (flags & testcase) == testcase )
-        connectionUP = NO;
-    
-#if	TARGET_OS_IPHONE
-    if(flags & kSCNetworkReachabilityFlagsIsWWAN)
-    {
-        // We're on 3G.
-        if(!self.reachableOnWWAN)
-        {
-            // We don't want to connect when on 3G.
+    // 7/10/2014, mkirk: In the simulator on Mavericks, often flags = 0 when network is restored.
+    //                   Others are seeing this, too: https://github.com/tonymillion/Reachability/issues/65
+    //                   Not sure yet if it also happens on device.
+    if (flags != 0) {
+        if(!(flags & kSCNetworkReachabilityFlagsReachable))
             connectionUP = NO;
+        
+        if( (flags & testcase) == testcase )
+            connectionUP = NO;
+        
+#if	TARGET_OS_IPHONE
+        if(flags & kSCNetworkReachabilityFlagsIsWWAN)
+        {
+            // We're on 3G.
+            if(!self.reachableOnWWAN)
+            {
+                // We don't want to connect when on 3G.
+                connectionUP = NO;
+            }
         }
-    }
 #endif
+    }
     
     return connectionUP;
 }
